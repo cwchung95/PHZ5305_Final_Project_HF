@@ -19,8 +19,6 @@
 # 
 # `random` is imported for giving a random value assigned for the other `me2b` values.
 
-# In[ ]:
-
 
 import numpy as np
 import pandas as pd
@@ -30,8 +28,8 @@ from scipy import optimize
 from scipy.optimize import minimize
 import random
 import sys
-from IPython.display import clear_output
-
+import os
+import curses
 
 # ## Part 2: Class for Generate single-particle states, two-body matrix element calculation, and solve Hartree-Fock.
 # 
@@ -42,9 +40,6 @@ from IPython.display import clear_output
 # `me2b` gets 4 index values for $\alpha$, $\beta$, $\gamma$, and $\delta$.
 # 
 # `Solve_HF` solves Hartree-Fock equation with algorithm
-
-# In[ ]:
-
 
 class HF_Machina:
     # Initial definition of states
@@ -263,9 +258,6 @@ class HF_Machina:
 # 
 # `generate_me2b` will generate the me2b values from the binding energies and assign random value centered at 0. 
 
-# In[ ]:
-
-
 class gen_me2b:
     
     def __init__(self):
@@ -378,9 +370,6 @@ class gen_me2b:
 # ## Part 4: Set a function for optimization
 # This part sets a function to be optimized by `scipy.optimize.minimize`. This function will return the error of $(E_C^{th}-E_C^{exp})^2-\sum_{i\neq j}(\Delta^{th}_{i,j}-\Delta^{exp}_{i,j})^2$ Where $\Delta_{i,j}$ is a energy difference between $i$ and $j$, where $i$ and $j$ are $^{4}\text{He}$, $^{12}\text{C}$, and $^{16}\text{O}$.
 
-# In[ ]:
-
-
 def minimize_this(x, me2b):
     exp_energies = {
         '4He':-28.30,
@@ -407,22 +396,19 @@ def minimize_this(x, me2b):
     
     error = float(error)
 
-    
-    clear_output(wait=True)
-    print("\n 4He energy : {0:.3f}".format(e_4He)+
-          "\n 12C energy : {0:.3f}".format(e_12C)+
-          "\n 16O energy : {0:.3f}".format(e_16O)+
-          "\n error      : {0:.3f}".format(error)+
-          "\n -------------------------", end='')
-    
+    sys.stdout.flush()
+    sys.stdout.write("\r"" 4He energy : {0:15.3f}\n".format(e_4He))
+    sys.stdout.write("\r"" 12C energy : {0:15.3f}\n".format(e_12C))
+    sys.stdout.write("\r"" 16O energy : {0:15.3f}\n".format(e_16O))
+    sys.stdout.write("\r"" error      : {0:15.3f}\n".format(error))
+    sys.stdout.write("\r"" ----------------------------")
+    sys.stdout.write("\x1b[1A"*4)
+
     
     return error
 
 
 # ## Main
-
-# In[ ]:
-
 
 if __name__=='__main__':
     HF = HF_Machina()
@@ -444,5 +430,17 @@ if __name__=='__main__':
     e_12C, e_list_12C = HF.Solve_HF(12,6,tbme_aftr_opt)
     e_16O, e_list_16O = HF.Solve_HF(16,8,tbme_aftr_opt)
     
-    print(e_list_16O)
+    sys.stdout.write(5*"\x1b[1B")
+    print("\r"'***************************************\n')
+    print("\r"'---------Minimization Finished---------\n')
+    print("\r"'---------------------------------------\n')
+    print("\r"'   Energy Levels after Fitting (MeV)  :\n')
+    print("\r"'---------------------------------------\n')
+    print("\r"'  4 He \t\t 12 C \t\t 16 O \n')
+    print("\r"'---------------------------------------\n')
+    for i in range(len(e_list_4He)):
+        ie_4He = ("{0:5.2f}\t".format(e_list_4He[i]) if e_list_4He[i]<0 else "    \t")
+        ie_12C = ("{0:5.2f}\t".format(e_list_12C[i]) if e_list_12C[i]<0 else "      \t")
+        ie_16O = ("{0:5.2f}\t".format(e_list_16O[i]) if e_list_16O[i]<0 else "      \t")
+        print("\r""  {0:s}\t{1:s}\t{2:s}\n".format(ie_4He, ie_12C, ie_16O))
 
